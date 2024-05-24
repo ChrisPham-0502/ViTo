@@ -60,6 +60,15 @@ def upload_images(ID: str, img_human, img_clothes, img_result):
         blob.upload_from_filename(path)
     print("Upload successful!")
 
+def upload_image(ID: str, image):
+    bucket = storage.bucket()  
+    user_folder = f'users/{ID}' 
+    
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    link_path = f'{user_folder}/{timestamp}/{image}'
+    blob = bucket.blob(link_path)
+    blob.upload_from_filename(image)
+    return link_path
 #===================================INFERENCE========================================
 if __name__=="__main__":
     update_data("YOUR ID", name="Huy", height="165", weight="60")
