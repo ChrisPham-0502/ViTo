@@ -78,9 +78,10 @@ def Vito_model(model_img, cloth_img, cloth_type:int = 0, args=args):
 
     image_idx = 0
     for image in images:
+        path = 'images_output/out_' + model_type + '_' + str(image_idx) + '.png'
         image.save('./images_output/out_' + model_type + '_' + str(image_idx) + '.png')
         image_idx += 1
-    return image
+    return path
 
 if __name__=="__main__":
     body_img = Image.open().resize((768, 1024))
