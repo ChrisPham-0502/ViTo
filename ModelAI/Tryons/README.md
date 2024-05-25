@@ -44,7 +44,7 @@ Run the following code
 !aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/OOTDiffusion/raw/main/checkpoints/ootd/model_index.json -d /OOTDiffusion/checkpoints/ootd -o model_index.json
 !aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/SUPIR/resolve/main/clip-vit-large-patch14.tar -d /OOTDiffusion/checkpoints -o clip-vit-large-patch14.tar
 ```
-2. Untar the tả file
+2. Untar specific file
 ```sh
 %cd OOTDiffusion/checkpoints
 !mkdir clip-vit-large-patch14
