@@ -1,6 +1,8 @@
 import HairStyle
-import Size_recommend
+import pickle
+import numpy as np
 from Tryons.main import Vito_model
+from Size_recomended.main import SR_feature
 
 from firebase_admin import storage
 
@@ -10,7 +12,6 @@ import numpy as np
 import cv2, os
 
 def VitoClothes(linkFirebaseHuman: str, linkFirebaseCloth: str): 
-    # return linkFirebaseResult: str   
     bucket = storage.bucket()
     blob = bucket.get_blob(linkFirebaseHuman)
     body_img = np.frombuffer(blob.download_as_string(), np.uint8)
@@ -27,21 +28,27 @@ def VitoClothes(linkFirebaseHuman: str, linkFirebaseCloth: str):
     path = Vito_model(model_img=body_img, cloth_img=cloth_img)
     img_path = os.path.basename(path)
     
-    root_dir = linkFirebaseHuman.split("/")
-    result = upload_image(ID=root_dir[1], image=img_path)
+    # root_dir = linkFirebaseHuman.split("/")
+    # result = upload_image(ID=root_dir[1], image=img_path)
     return result
     
         
-
 def VitoHair():
     pass
 
-def VitoSize(weight: str, height: str):
+def VitoSize(_weight: str, _height: str, _age: str):
     #return size: str
-    pass
+    weight = float(_weight)
+    height = float(_height)
+    age = int(_age)
+    id2label, pred = SR_feature.return_size(weight, height, age, model=kmeans)
+    size = id2label.get(pred[0], "Unknown_size")
+    return size
+
+
 
 if __name__=="__main__":
-    body_path = upload_image(ID=12345, image="body.jpg")
-    garment = upload_image(ID=None, image='garment.jpg')
+    body_path = upload_image(ID=12345, image="body.JPG")
+    garment = upload_image(ID=None, image='shirt.png')
     
     linkFirebaseResult = VitoClothes(body_path, garment)

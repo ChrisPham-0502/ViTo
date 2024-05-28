@@ -1,68 +1,24 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Header
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.security import HTTPBearer
-from pydantic import ValidationError
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
 
-from passlib.context import CryptContext
-from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-from typing import Optional
 from schemas import SignUpModel, LoginModel, Token
 from database import usersDB
 import uvicorn
+from authorization import *
 
-# FastAPI app
-app = FastAPI()
-
-# Security
-SECRET_KEY = "ye_@evo=SUSJ022xQK0BB!WCAIcw(c"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-pwdContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
-def hash_password(password: str):
-    return pwdContext.hash(password)
-
-def verify_password(plainPassword, hashedPassword):
-    return pwdContext.verify(plainPassword, hashedPassword)
-
-def authenticateUser(email: str, password: str):
-    user = usersDB.find_one({"email": email})
-    if user == None:
-        return False
-    if verify_password(password, user["password"]) == False:
-        return False
-    return user
-
-def createAccessToken(data: dict, expires_delta: Optional[timedelta] = None):
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=expires_delta)
-    to_encode = data.copy()
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    return encoded_jwt
-
-reusable_oauth2 = HTTPBearer(
-    scheme_name='Authorization'
+# from ModelAI.AI import VitoClothes, VitoHair, VitoSize
+app = FastAPI(swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-def validate_token(http_authorization_credentials=Depends(reusable_oauth2)) -> str:
-    try:
-        payload = jwt.decode(http_authorization_credentials.credentials, SECRET_KEY, ALGORITHM)
-        if payload.get('email') < datetime.now():
-            raise HTTPException(status_code=403, detail="Token expired")
-        return payload.get('email')
-    
-    except:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Could not validate credentials",
-        )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
+
 
 @app.post("/register")
 async def register_user(input: SignUpModel):
@@ -82,13 +38,15 @@ async def register_user(input: SignUpModel):
     new_user = {
         "username": input.username,
         "email": input.email,
-        "password": hashed_password
+        "password": hashed_password,
+        "proUser": input.proUser
     }
     usersDB.insert_one(new_user)
     return {"status_code": status.HTTP_200_OK,
             "detail": "User registered successfully"}
 
-# Token endpoint
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
 @app.post("/login", response_model=Token)
 async def loginForAccessToken(input: LoginModel,authorization:str=Header(None)):
     user = authenticateUser(input.email, input.password)
@@ -108,6 +66,10 @@ async def loginForAccessToken(input: LoginModel,authorization:str=Header(None)):
 def list_books():
     return {'data': ['Sherlock Homes', 'Harry Potter', 'Rich Dad Poor Dad']}
 
+@app.get('/admin', dependencies=[Depends(adminRequired)])
+def admin_dashboard():
+    return {'data': 'Admin Dashboard'}
+
 
 if __name__ == "__main__":
-    uvicorn.run(app)
+    uvicorn.run("main:app", reload = True)
