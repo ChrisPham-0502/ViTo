@@ -17,7 +17,6 @@ def hash_password(password: str):
 def verify_password(plainPassword, hashedPassword):
     return pwdContext.verify(plainPassword, hashedPassword)
 
-#For login page.
 def authenticateUser(email: str, password: str):
     user = usersDB.find_one({"email": email})
     if user == None:
@@ -64,11 +63,10 @@ def validate_token(http_authorization_credentials=Depends(reusable_oauth2)) -> s
         )
     return token_data
 
-# Check if the user is admin
 def adminRequired(token_data: dict = Depends(validate_token)):
     email = token_data.get("sub")
     user = usersDB.find_one({"email": email})
-    if user["email"] != "vitotrolythoitrangai@gmail.com":
+    if user["email"] != "vito@gmail.com":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this resource",

@@ -1,18 +1,18 @@
 from pathlib import Path
 import sys
 from PIL import Image
-from run.utils_ootd import get_mask_location
+from ModelAI.OOTDiffusion.run.utils_ootd import get_mask_location
 
 PROJECT_ROOT = Path(__file__).absolute().parents[1].absolute()
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from preprocess.openpose.run_openpose import OpenPose
-from preprocess.humanparsing.aigc_run_parsing import Parsing
-from ootd.inference_ootd_hd import OOTDiffusionHD
+from ModelAI.OOTDiffusion.preprocess.openpose.run_openpose import OpenPose
+from ModelAI.OOTDiffusion.preprocess.humanparsing.aigc_run_parsing import Parsing
+from ModelAI.OOTDiffusion.ootd.inference_ootd_hd import OOTDiffusionHD
 #from ootd.inference_ootd_dc import OOTDiffusionDC
 
 import argparse
-parser = argparse.ArgumentParser(description='run ootd')
+parser = argparse.ArgumentParser(description='run_ootd')
 parser.add_argument('--gpu_id', '-g', type=int, default=0, required=False)
 parser.add_argument('--model_path', type=str, default="", required=True)
 #parser.add_argument('--cloth_path', type=str, default="", required=True)

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import List
 
 class SignUpModel(BaseModel):
     username: str
@@ -22,3 +23,5 @@ class VitoClothes(BaseModel):
 class VitoSize(BaseModel):
     heigth: str
     
+class configEmail(BaseModel):
+    email: EmailStr    
