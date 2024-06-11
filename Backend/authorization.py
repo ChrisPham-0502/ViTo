@@ -5,10 +5,11 @@ from database import usersDB
 from typing import Optional
 from fastapi.security import HTTPBearer
 from fastapi import HTTPException, status, Depends
+from security import Config
 
-SECRET_KEY = "ye_@evo=SUSJ022xQK0BB!WCAIcw(c"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 720
+SECRET_KEY = Config.SECRET_KEY
+ALGORITHM = Config.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = Config.ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwdContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str):

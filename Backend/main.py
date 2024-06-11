@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 scheduler = BackgroundScheduler()
-scheduler.add_job(saveDailyStatistics, 'cron', hour=16, minute=7)  
+scheduler.add_job(saveDailyStatistics, 'cron', hour=0, minute=0)  
 scheduler.start()
 
 
