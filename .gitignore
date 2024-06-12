@@ -1,4 +1,4 @@
 venv
 Frontend/
-__pycache__/
-ModelAI
+__pycache__
+ModelAI/

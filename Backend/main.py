@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 scheduler = BackgroundScheduler()
-scheduler.add_job(saveDailyStatistics, 'cron', hour=0, minute=0)  
+scheduler.add_job(saveDailyStatistics, 'cron', hour=16, minute=31)  
 scheduler.start()
 
 
@@ -58,32 +58,29 @@ async def register_user(input: SignUpModel):
 
 @app.post("/login")
 async def loginForAccessToken(input: LoginModel):
-    try:
-        user = authenticateUser(input.email, input.password)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = createAccessToken(data={"sub": user["email"]}, expires_delta=access_token_expires)
+    user = authenticateUser(input.email, input.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = createAccessToken(data={"sub": user["email"]}, expires_delta=access_token_expires)
 
-        return {"access_token": access_token, "token_type": "bearer"}
-    except:
-        return {"detail": "something went wrong!"}
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get('/showDashboard')
-def adminDashboard():
+@app.get('/showStatistic', dependencies=[Depends(adminRequired)])
+def adminStatistic():
     totalUsers = usersDB.count_documents({})
     proUsers = usersDB.count_documents({"proUser": True})
     revenue = proUsers*60000
     return {"totalUsers": str(totalUsers), "proUsers": str(proUsers), "revenue": str(revenue)}
 
 
-@app.put('/updateToPro')
+@app.put('/updateToPro', dependencies=[Depends(adminRequired)])
 def updateToPro(input: configEmail):
     user = usersDB.find_one({"email": input.email})
     if user is None:
@@ -104,17 +101,25 @@ def updateToPro(input: configEmail):
         }
 
 
-@app.get('/allUsers')
+@app.get('/getAllUsers', dependencies=[Depends(adminRequired)])
 def getAllUserEmails():
     user_data = usersDB.find({}, {"_id": 0, "email": 1, "proUser": 1})
     users_list = [{"email": user['email'], "proUser": user['proUser']} for user in user_data]
     return {"status_code": status.HTTP_200_OK, "emails": users_list}
 
 
-@app.get("/triggerStatistics", dependencies=[Depends(adminRequired)])
-async def triggerStatistics(background_tasks: BackgroundTasks):
-    background_tasks.add_task(saveDailyStatistics)
-    return {"message": "Statistics calculation started in the background"}
+@app.get("/getDashboard", dependencies=[Depends(adminRequired)])
+async def getDailyAmountOfUsers():
+    cursor = dashboardDB.find({})
+    dailyStatistics = []
+    for document in cursor:
+        date_str = document["date"].strftime("%m-%d")
+        dailyStatistics.append({
+            "date": date_str,
+            "totalUsers": document["totalUsers"],
+            "proUsers": document["totalProUsers"]
+        })
+    return  {"status_code": status.HTTP_200_OK, "data": dailyStatistics}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload = True)
