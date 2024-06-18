@@ -1,5 +1,6 @@
 from passlib.context import CryptContext
-from jose import JWTError, jwt, ExpiredSignatureError
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 from datetime import datetime, timedelta
 from database import usersDB
 from typing import Optional
@@ -12,6 +13,7 @@ ALGORITHM = Config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = Config.ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwdContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 def hash_password(password: str):
     return pwdContext.hash(password)
 
@@ -20,9 +22,9 @@ def verify_password(plainPassword, hashedPassword):
 
 def authenticateUser(email: str, password: str):
     user = usersDB.find_one({"email": email})
-    if user == None:
+    if user is None:
         return False
-    if verify_password(password, user["password"]) == False:
+    if not verify_password(password, user["password"]):
         return False
     return user
 
@@ -30,14 +32,14 @@ def createAccessToken(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=expires_delta)
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = data.copy()
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
     return encoded_jwt
 
 reusable_oauth2 = HTTPBearer(scheme_name='Authorization')
+
 def validate_token(http_authorization_credentials=Depends(reusable_oauth2)) -> str:
     try:
         token = http_authorization_credentials.credentials
@@ -56,7 +58,7 @@ def validate_token(http_authorization_credentials=Depends(reusable_oauth2)) -> s
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except JWTError:
+    except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
