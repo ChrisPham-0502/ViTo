@@ -16,7 +16,7 @@ from background import saveDailyStatistics
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-app = FastAPI(swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -122,4 +122,4 @@ async def getDailyAmountOfUsers():
     return  {"status_code": status.HTTP_200_OK, "data": dailyStatistics}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload = True)
+    uvicorn.run("main:app",host='127.0.0.1', port = 8000, reload = True)
